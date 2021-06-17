@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 
 
 ```python
-data = pd.read_csv('/Users/leuzinger/Dropbox/Data Science/Awari/Classification/Algerian_forest_fires_dataset_UPDATE.csv')
+data = pd.read_csv('/Users/leuzinger/Dropbox/Data Science/Awari/Classification/Algerian Forest Fires Dataset Data Set/Algerian_forest_fires_dataset_UPDATE.csv')
 data.reset_index(inplace=True)
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -413,17 +413,14 @@ data.Classes.unique()
 
 ```python
 data['Classes'] = data['Classes'].str.replace(' ','').str.replace('  ','').str.replace('notfire','not fire')
-```
-
-
-```python
+data['Classes'] = data['Classes'].str.replace('not fire','0').str.replace('fire','1').astype(int)
 data.Classes.unique()
 ```
 
 
 
 
-    array(['not fire', 'fire'], dtype=object)
+    array([0, 1])
 
 
 
@@ -481,7 +478,7 @@ data.head()
       <td>1.3</td>
       <td>3.4</td>
       <td>0.5</td>
-      <td>not fire</td>
+      <td>0</td>
       <td>Bejaia</td>
       <td>2012-06-01</td>
     </tr>
@@ -497,7 +494,7 @@ data.head()
       <td>1.0</td>
       <td>3.9</td>
       <td>0.4</td>
-      <td>not fire</td>
+      <td>0</td>
       <td>Bejaia</td>
       <td>2012-06-02</td>
     </tr>
@@ -513,7 +510,7 @@ data.head()
       <td>0.3</td>
       <td>2.7</td>
       <td>0.1</td>
-      <td>not fire</td>
+      <td>0</td>
       <td>Bejaia</td>
       <td>2012-06-03</td>
     </tr>
@@ -529,7 +526,7 @@ data.head()
       <td>0.0</td>
       <td>1.7</td>
       <td>0.0</td>
-      <td>not fire</td>
+      <td>0</td>
       <td>Bejaia</td>
       <td>2012-06-04</td>
     </tr>
@@ -545,7 +542,7 @@ data.head()
       <td>1.2</td>
       <td>3.9</td>
       <td>0.5</td>
-      <td>not fire</td>
+      <td>0</td>
       <td>Bejaia</td>
       <td>2012-06-05</td>
     </tr>
@@ -563,7 +560,7 @@ First, let's have a look at some statistics from the data set. We verifiy that t
 
 Second, we must verify if our data set is balanced. **We can see that the classes are reasonably balanced between fires and not fires**.
 
-"It is often useful to look at your data using multiple different visualizations in order to spark ideas" [(BROWNLEE, 2016)](https://machinelearningmastery.com/machine-learning-with-python/). Looking at the histogram of the atributes, we verify that some have Gaussian-like distributions and other exponential-like distributions. Besides, the boxplots show that the attributes have quite different spreads.
+"It is often useful to look at your data using multiple different visualizations in order to spark ideas" [(BROWNLEE, 2016)](https://machinelearningmastery.com/machine-learning-with-python/). Looking at the histogram of the atributes, we verify that some have Gaussian-like distributions and other exponential-like distributions.
 
 
 ```python
@@ -601,11 +598,13 @@ data.describe()
       <th>ISI</th>
       <th>BUI</th>
       <th>FWI</th>
+      <th>Classes</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>count</th>
+      <td>244.000000</td>
       <td>244.000000</td>
       <td>244.000000</td>
       <td>244.000000</td>
@@ -629,6 +628,7 @@ data.describe()
       <td>4.759836</td>
       <td>16.673361</td>
       <td>7.049180</td>
+      <td>0.565574</td>
     </tr>
     <tr>
       <th>std</th>
@@ -642,6 +642,7 @@ data.describe()
       <td>4.154628</td>
       <td>14.201648</td>
       <td>7.428366</td>
+      <td>0.496700</td>
     </tr>
     <tr>
       <th>min</th>
@@ -654,6 +655,7 @@ data.describe()
       <td>6.900000</td>
       <td>0.000000</td>
       <td>1.100000</td>
+      <td>0.000000</td>
       <td>0.000000</td>
     </tr>
     <tr>
@@ -668,6 +670,7 @@ data.describe()
       <td>1.400000</td>
       <td>6.000000</td>
       <td>0.700000</td>
+      <td>0.000000</td>
     </tr>
     <tr>
       <th>50%</th>
@@ -681,6 +684,7 @@ data.describe()
       <td>3.500000</td>
       <td>12.450000</td>
       <td>4.450000</td>
+      <td>1.000000</td>
     </tr>
     <tr>
       <th>75%</th>
@@ -694,6 +698,7 @@ data.describe()
       <td>7.300000</td>
       <td>22.525000</td>
       <td>11.375000</td>
+      <td>1.000000</td>
     </tr>
     <tr>
       <th>max</th>
@@ -707,6 +712,7 @@ data.describe()
       <td>19.000000</td>
       <td>68.000000</td>
       <td>31.100000</td>
+      <td>1.000000</td>
     </tr>
   </tbody>
 </table>
@@ -716,16 +722,15 @@ data.describe()
 
 
 ```python
-data.groupby('Classes').size()
+data.Classes.value_counts()
 ```
 
 
 
 
-    Classes
-    fire        138
-    not fire    106
-    dtype: int64
+    1    138
+    0    106
+    Name: Classes, dtype: int64
 
 
 
@@ -737,19 +742,7 @@ plt.show()
 
 
     
-![png](output_22_0.png)
-    
-
-
-
-```python
-data.plot(kind='box', subplots=True, layout=(4,3), sharex=False, sharey=False, fontsize=10, figsize=(16, 16))
-plt.show()
-```
-
-
-    
-![png](output_23_0.png)
+![png](output_21_0.png)
     
 
 
@@ -768,15 +761,7 @@ from sklearn.model_selection import train_test_split
 fire_X = data.drop('Classes',axis=1).copy()
 fire_y = data['Classes'].copy()
 
-X_train, X_test, y_train, y_test = train_test_split(fire_X, fire_y, test_size=0.2)
-```
-
-
-```python
-fire_X_train = X_train.copy()
-fire_y_train = y_train.copy()
-fire_X_test = X_test.copy()
-fire_y_test = y_test.copy()
+fire_X_train, fire_X_test, fire_y_train, fire_y_test = train_test_split(fire_X, fire_y, test_size=0.2,stratify=fire_y)
 ```
 
 ----------
@@ -807,16 +792,15 @@ data.isnull().values.any()
 
 
 ```python
+import warnings
+warnings.filterwarnings("ignore")
+
 fire_X_train['date'] = fire_X_train['date'].dt.week
 fire_X_train = fire_X_train.rename(columns={'date': 'week'})
 fire_X_train['region'] = fire_X_train['region'].str.replace('Bejaia','0').str.replace('Sidi-Bel Abbes','1')
 fire_X_train['region'] = fire_X_train['region'].astype(int)
 fire_X_train.head()
 ```
-
-    <ipython-input-19-5925d5708dd2>:1: FutureWarning: Series.dt.weekofyear and Series.dt.week have been deprecated.  Please use Series.dt.isocalendar().week instead.
-      fire_X_train['date'] = fire_X_train['date'].dt.week
-
 
 
 
@@ -855,79 +839,79 @@ fire_X_train.head()
   </thead>
   <tbody>
     <tr>
-      <th>231</th>
-      <td>32</td>
-      <td>51</td>
-      <td>13</td>
-      <td>0.0</td>
-      <td>88.7</td>
-      <td>16.0</td>
-      <td>50.2</td>
-      <td>6.9</td>
-      <td>17.8</td>
-      <td>9.8</td>
-      <td>1</td>
-      <td>37</td>
-    </tr>
-    <tr>
-      <th>189</th>
-      <td>38</td>
-      <td>35</td>
-      <td>15</td>
-      <td>0.0</td>
-      <td>93.8</td>
-      <td>23.0</td>
-      <td>42.7</td>
-      <td>15.7</td>
-      <td>22.9</td>
-      <td>20.9</td>
-      <td>1</td>
-      <td>31</td>
-    </tr>
-    <tr>
-      <th>205</th>
-      <td>36</td>
-      <td>81</td>
-      <td>15</td>
-      <td>0.0</td>
-      <td>83.7</td>
-      <td>34.4</td>
-      <td>107.0</td>
-      <td>3.8</td>
-      <td>38.1</td>
-      <td>9.0</td>
-      <td>1</td>
-      <td>34</td>
-    </tr>
-    <tr>
-      <th>20</th>
-      <td>30</td>
-      <td>80</td>
-      <td>16</td>
-      <td>0.4</td>
-      <td>59.8</td>
-      <td>3.4</td>
-      <td>27.1</td>
-      <td>0.9</td>
-      <td>5.1</td>
-      <td>0.4</td>
-      <td>0</td>
+      <th>122</th>
       <td>25</td>
-    </tr>
-    <tr>
-      <th>146</th>
-      <td>33</td>
-      <td>46</td>
+      <td>78</td>
       <td>14</td>
-      <td>1.1</td>
-      <td>78.3</td>
-      <td>8.1</td>
-      <td>8.3</td>
+      <td>1.4</td>
+      <td>45.0</td>
       <td>1.9</td>
-      <td>7.7</td>
-      <td>1.2</td>
+      <td>7.5</td>
+      <td>0.2</td>
+      <td>2.4</td>
+      <td>0.1</td>
+      <td>0</td>
+      <td>39</td>
+    </tr>
+    <tr>
+      <th>89</th>
+      <td>34</td>
+      <td>64</td>
+      <td>16</td>
+      <td>0.0</td>
+      <td>89.4</td>
+      <td>50.2</td>
+      <td>210.4</td>
+      <td>7.3</td>
+      <td>62.9</td>
+      <td>19.9</td>
+      <td>0</td>
+      <td>35</td>
+    </tr>
+    <tr>
+      <th>41</th>
+      <td>33</td>
+      <td>76</td>
+      <td>14</td>
+      <td>0.0</td>
+      <td>81.1</td>
+      <td>8.1</td>
+      <td>18.7</td>
+      <td>2.6</td>
+      <td>8.1</td>
+      <td>2.2</td>
+      <td>0</td>
+      <td>28</td>
+    </tr>
+    <tr>
+      <th>193</th>
+      <td>37</td>
+      <td>56</td>
+      <td>11</td>
+      <td>0.0</td>
+      <td>87.4</td>
+      <td>11.2</td>
+      <td>20.2</td>
+      <td>5.2</td>
+      <td>11.0</td>
+      <td>5.9</td>
       <td>1</td>
-      <td>25</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>160</th>
+      <td>35</td>
+      <td>42</td>
+      <td>15</td>
+      <td>0.3</td>
+      <td>84.7</td>
+      <td>15.5</td>
+      <td>45.1</td>
+      <td>4.3</td>
+      <td>16.7</td>
+      <td>6.3</td>
+      <td>1</td>
+      <td>27</td>
     </tr>
   </tbody>
 </table>
@@ -970,23 +954,20 @@ Evaluating a classifier is often trickier than evaluating other ML models. **"Cl
 
 **A good way to evaluate classification ML models is to use a confusion matrix**. "The general idea is to count the number of times instances of class A are classified as class B" (GÉRON, 2019). "A confusion matrix is simply a square matrix that reports the counts of the true positive (TP), true negative (TN), false positive (FP), and false negative (FN) predictions of a classifier" [(RASCHKA; MIRJALILI, 2019)](https://www.amazon.com.br/Python-Machine-Learning-Sebastian-Raschka-dp-1789955750/dp/1789955750/ref=dp_ob_title_bk). 
 
-**A more concise metric to the confusion matrix is the accuracy of the positive predictions, called the precision of the classifier** (GÉRON, 2019). Precision can be calculated dividing the number of true positives by the sum of true positives and false positives (RASCHKA; MIRJALILI, 2019). "Precision is typically used along with another metric named recall, also called sensitivity or the true positive rate (TPR): this is the ratio of positive instances that are correctly detected by the classifier" (GÉRON, 2019). Recall can be calculated dividing the number of true positives by the sum of true positives and false negatives (RASCHKA; MIRJALILI, 2019).
+**A more concise metric to the confusion matrix is the accuracy of the positive predictions, called the precision of the classifier** (GÉRON, 2019). Precision can be calculated dividing the number of true positives by the sum of true positives and false positives (RASCHKA; MIRJALILI, 2019). "Precision is typically used along with another metric named recall, also called sensitivity or the true positive rate (TPR): this is the ratio of positive instances that are correctly detected by the classifier" (GÉRON, 2019). Recall can be calculated dividing the number of true positives by the sum of true positives and false negatives (RASCHKA; MIRJALILI, 2019). **"Alone, neither precision or recall tells the whole story"** [(BROWNLEE, 2020)](https://machinelearningmastery.com/imbalanced-classification-with-python/). The F-score (or F1-score) combines Precision and Recall in a single score. It is the harmonic mean of this two factors. A good F-score means that the model has both a good Precision and a good Recall.
 
 Finally, **the receiver operating characteristic (ROC) curve is another common tool used with binary classifiers** (GÉRON, 2019). It is useful to select classification models based on their perfomance with respect to the true positive rate (TPR) and false positive rate (FPR) (RASCHKA; MIRJALILI, 2019).
 
+**Nonetheless, the metric we use to evaluate the models is the F1-score because in our problem accuratelty detecting fires (true positives) is more important than accuratelty detetecting not fires (true negatives)**. 
+
 Besides, "the key to a fair comparison of machine learning algorithms is ensuring that each algorithm is evaluated in the same way on the same data. You can achieve this by forcing each algorithm to be evaluated on a consistent test harness" (BROWNLEE, 2016). In this project, we do this by using the same split in the cross validation. We use the KFold function from the sklearn library with a random value rs as the random_state parameter. Although the rs value change everytime the notebook is run, once it is set, the same rs value is used in all the models. This guarantees that all the models are evaluated on the same data.
 
-**The results show that the CART model has the best Accuracy, ROC-AUC and Precision of all tested models. The confusion matrix of this model has neither false positives nor false negatives**. The LogR model also has high Accuracy, ROC-AUC and Precision. However, the LogR model has one false positive in its confusion matrix. Furthermore, we see that feature scaling does not have a significant impact on the models, contrary to our initial analysis. The exception is the SVM model, which has better Accuracy and ROC-AUC when resources are scaled. 
+**The results show that the CART model has the best F1-score**, and also the best Accuracy and all tested models. The LogR and SVM models also have a high F1-score. Furthermore, we see that feature scaling does not have a significant impact on the models, contrary to our initial analysis.
 
 
 ```python
-from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import classification_report
-import warnings
-
-warnings.filterwarnings("ignore")
 
 def evaluation(model,X_train,y_train,rs):
     model.fit(X_train,y_train)
@@ -994,23 +975,21 @@ def evaluation(model,X_train,y_train,rs):
     kfold = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=rs)
     results_acc = cross_val_score(model, X_train, y_train, cv=kfold, scoring='accuracy')
     results_roc = cross_val_score(model, X_train, y_train, cv=kfold, scoring='roc_auc')
-    CM = confusion_matrix(y_train,yhat_train)
-    report = classification_report(y_train,yhat_train)
+    results_f1 = cross_val_score(model, X_train, y_train, cv=kfold, scoring='f1')
+    
     print('Accuracy: %.6f (%.6f)' % (results_acc.mean(), results_acc.std()))
-    print('\nConfusion Matrix:\n\n',CM)
-    print('\nReport:\n',report)
-    print('ROC-AUC: %.6f (%.6f)\n' % (results_roc.mean(), results_roc.std()))
-
+    print('ROC-AUC: %.6f (%.6f)' % (results_roc.mean(), results_roc.std()))
+    print('F1-score: %.6f (%.6f)' % (results_f1.mean(), results_f1.std()))
+    
 def evaluation2(model,X_train,y_train,rs):
     model.fit(X_train,y_train)
     yhat_train = model.predict(X_train)
     kfold = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=rs)
     results_acc = cross_val_score(model, X_train, y_train, cv=kfold, scoring='accuracy')
     results_roc = cross_val_score(model, X_train, y_train, cv=kfold, scoring='roc_auc')
-    CM = confusion_matrix(y_train,yhat_train)
-    report = classification_report(y_train,yhat_train,output_dict=True)
+    results_f1 = cross_val_score(model, X_train, y_train, cv=kfold, scoring='f1')
     
-    return results_acc,CM,results_roc,report
+    return results_acc,results_roc,results_f1
 ```
 
 
@@ -1023,329 +1002,28 @@ rs = randrange(10000)
 
 ```python
 from sklearn.linear_model import LogisticRegression
-
-reg = evaluation(LogisticRegression(),fire_X_train,fire_y_train,rs)
-
-pipe_reg = estimator_scaler(LogisticRegression())
-
-reg_scl = evaluation(pipe_reg,fire_X_train,fire_y_train,rs)
-```
-
-    Accuracy: 0.962281 (0.039883)
-    
-    Confusion Matrix:
-    
-     [[117   0]
-     [  1  77]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.99      1.00      1.00       117
-        not fire       1.00      0.99      0.99        78
-    
-        accuracy                           0.99       195
-       macro avg       1.00      0.99      0.99       195
-    weighted avg       0.99      0.99      0.99       195
-    
-    ROC-AUC: 0.996433 (0.009206)
-    
-    Accuracy: 0.948772 (0.052862)
-    
-    Confusion Matrix:
-    
-     [[115   2]
-     [  4  74]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.97      0.98      0.97       117
-        not fire       0.97      0.95      0.96        78
-    
-        accuracy                           0.97       195
-       macro avg       0.97      0.97      0.97       195
-    weighted avg       0.97      0.97      0.97       195
-    
-    ROC-AUC: 0.992483 (0.014296)
-    
-
-
-
-```python
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-
-lda = evaluation(LinearDiscriminantAnalysis(),fire_X_train,fire_y_train,rs)
-
-pipe_lda = estimator_scaler(LinearDiscriminantAnalysis())
-
-lda_scl = evaluation(pipe_lda,fire_X_train,fire_y_train,rs)
-```
-
-    Accuracy: 0.930088 (0.061928)
-    
-    Confusion Matrix:
-    
-     [[113   4]
-     [  6  72]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.95      0.97      0.96       117
-        not fire       0.95      0.92      0.94        78
-    
-        accuracy                           0.95       195
-       macro avg       0.95      0.94      0.95       195
-    weighted avg       0.95      0.95      0.95       195
-    
-    ROC-AUC: 0.987374 (0.021206)
-    
-    Accuracy: 0.930088 (0.061928)
-    
-    Confusion Matrix:
-    
-     [[113   4]
-     [  6  72]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.95      0.97      0.96       117
-        not fire       0.95      0.92      0.94        78
-    
-        accuracy                           0.95       195
-       macro avg       0.95      0.94      0.95       195
-    weighted avg       0.95      0.95      0.95       195
-    
-    ROC-AUC: 0.987374 (0.021206)
-    
-
-
-
-```python
 from sklearn.neighbors import KNeighborsClassifier
-
-knn = evaluation(KNeighborsClassifier(),fire_X_train,fire_y_train,rs)
-
-pipe_knn = estimator_scaler(KNeighborsClassifier())
-
-knn_scl = evaluation(pipe_knn,fire_X_train,fire_y_train,rs)
-```
-
-    Accuracy: 0.917719 (0.058930)
-    
-    Confusion Matrix:
-    
-     [[116   1]
-     [ 14  64]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.89      0.99      0.94       117
-        not fire       0.98      0.82      0.90        78
-    
-        accuracy                           0.92       195
-       macro avg       0.94      0.91      0.92       195
-    weighted avg       0.93      0.92      0.92       195
-    
-    ROC-AUC: 0.947175 (0.049720)
-    
-    Accuracy: 0.893860 (0.054685)
-    
-    Confusion Matrix:
-    
-     [[115   2]
-     [ 11  67]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.91      0.98      0.95       117
-        not fire       0.97      0.86      0.91        78
-    
-        accuracy                           0.93       195
-       macro avg       0.94      0.92      0.93       195
-    weighted avg       0.94      0.93      0.93       195
-    
-    ROC-AUC: 0.944715 (0.059731)
-    
-
-
-
-```python
 from sklearn.naive_bayes import GaussianNB
-
-gnb = evaluation(GaussianNB(),fire_X_train,fire_y_train,rs)
-
-pipe_gnb = estimator_scaler(GaussianNB())
-
-gnb_scl = evaluation(pipe_gnb,fire_X_train,fire_y_train,rs)
-```
-
-    Accuracy: 0.945088 (0.051750)
-    
-    Confusion Matrix:
-    
-     [[110   7]
-     [  4  74]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.96      0.94      0.95       117
-        not fire       0.91      0.95      0.93        78
-    
-        accuracy                           0.94       195
-       macro avg       0.94      0.94      0.94       195
-    weighted avg       0.94      0.94      0.94       195
-    
-    ROC-AUC: 0.982991 (0.029086)
-    
-    Accuracy: 0.945088 (0.051750)
-    
-    Confusion Matrix:
-    
-     [[110   7]
-     [  4  74]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.96      0.94      0.95       117
-        not fire       0.91      0.95      0.93        78
-    
-        accuracy                           0.94       195
-       macro avg       0.94      0.94      0.94       195
-    weighted avg       0.94      0.94      0.94       195
-    
-    ROC-AUC: 0.982991 (0.029086)
-    
-
-
-
-```python
 from sklearn.ensemble import RandomForestClassifier
-
-cart = evaluation(RandomForestClassifier(random_state=rs),fire_X_train,fire_y_train,rs)
-
-pipe_cart = estimator_scaler(RandomForestClassifier(random_state=rs))
-
-cart_scl = evaluation(pipe_cart,fire_X_train,fire_y_train,rs)
-```
-
-    Accuracy: 0.976053 (0.039058)
-    
-    Confusion Matrix:
-    
-     [[117   0]
-     [  0  78]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       1.00      1.00      1.00       117
-        not fire       1.00      1.00      1.00        78
-    
-        accuracy                           1.00       195
-       macro avg       1.00      1.00      1.00       195
-    weighted avg       1.00      1.00      1.00       195
-    
-    ROC-AUC: 0.998722 (0.003887)
-    
-    Accuracy: 0.976053 (0.039058)
-    
-    Confusion Matrix:
-    
-     [[117   0]
-     [  0  78]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       1.00      1.00      1.00       117
-        not fire       1.00      1.00      1.00        78
-    
-        accuracy                           1.00       195
-       macro avg       1.00      1.00      1.00       195
-    weighted avg       1.00      1.00      1.00       195
-    
-    ROC-AUC: 0.998722 (0.003887)
-    
-
-
-
-```python
 from sklearn.svm import SVC
 
-svc = evaluation(SVC(),fire_X_train,fire_y_train,rs)
+result = pd.DataFrame(columns=['model','Accuracy_mean','Accuracy_std','ROC-AUC_mean','ROC-AUC_std',
+                               'F1-score_std','F1-score_mean'])
 
-pipe_svc = estimator_scaler(SVC())
-
-svc_scl = evaluation(pipe_svc,fire_X_train,fire_y_train,rs)
-```
-
-    Accuracy: 0.928158 (0.050766)
-    
-    Confusion Matrix:
-    
-     [[115   2]
-     [ 11  67]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.91      0.98      0.95       117
-        not fire       0.97      0.86      0.91        78
-    
-        accuracy                           0.93       195
-       macro avg       0.94      0.92      0.93       195
-    weighted avg       0.94      0.93      0.93       195
-    
-    ROC-AUC: 0.976790 (0.035086)
-    
-    Accuracy: 0.928158 (0.052553)
-    
-    Confusion Matrix:
-    
-     [[114   3]
-     [  5  73]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.96      0.97      0.97       117
-        not fire       0.96      0.94      0.95        78
-    
-        accuracy                           0.96       195
-       macro avg       0.96      0.96      0.96       195
-    weighted avg       0.96      0.96      0.96       195
-    
-    ROC-AUC: 0.985638 (0.015748)
-    
-
-
-
-```python
-result = pd.DataFrame(columns=['model','Accuracy_mean','Accuracy_std','ROC-AUC_mean','ROC-AUC_std','Precision',
-                               'Recall','f1-score','TN','FP','FN','TP'])
-
-models = [LogisticRegression(),LinearDiscriminantAnalysis(),KNeighborsClassifier(),GaussianNB(),RandomForestClassifier(random_state=rs),SVC()]
+models = [LogisticRegression(),LinearDiscriminantAnalysis(),KNeighborsClassifier(),GaussianNB(),RandomForestClassifier(random_state=rs),SVC(kernel='linear')]
 models_str = ['LR','LDA','KNN','GaussianNB','CART','SVM']
 
 for k in range(len(models)):
-    results_acc,CM,results_roc,report = evaluation2(models[k],fire_X_train,fire_y_train,rs)
+    results_acc,results_roc,results_f1 = evaluation2(models[k],fire_X_train,fire_y_train,rs)
     results_ = [models_str[k],results_acc.mean(),results_acc.std(),results_roc.mean(),results_roc.std(),
-                report['weighted avg']['precision'],report['weighted avg']['recall'],report['weighted avg']['f1-score'],
-               CM[0,0],CM[0,1],CM[1,0],CM[1,1]]
+                results_f1.mean(),results_f1.std()]
     results_ = pd.Series(results_, index = result.columns)
     result = result.append(results_,ignore_index=True)
     pipe_ = estimator_scaler(models[k])
-    results_acc_scl,CM_scl,results_roc_scl,report_scl = evaluation2(pipe_,fire_X_train,fire_y_train,rs)
+    results_acc_scl,results_roc_scl,results_f1_scl = evaluation2(pipe_,fire_X_train,fire_y_train,rs)
     results_pipe = [models_str[k]+'_scl',results_acc_scl.mean(),results_acc_scl.std(),results_roc_scl.mean(),
-                    results_roc_scl.std(),report_scl['weighted avg']['precision'],report_scl['weighted avg']['recall'],
-                    report_scl['weighted avg']['f1-score'],CM[0,0],CM[0,1],CM[1,0],CM[1,1]]
+                    results_roc_scl.std(),results_f1_scl.mean(),results_f1_scl.std()]
     results_pipe = pd.Series(results_pipe, index = result.columns)
     result = result.append(results_pipe,ignore_index=True)
 
@@ -1378,195 +1056,130 @@ result
       <th>Accuracy_std</th>
       <th>ROC-AUC_mean</th>
       <th>ROC-AUC_std</th>
-      <th>Precision</th>
-      <th>Recall</th>
-      <th>f1-score</th>
-      <th>TN</th>
-      <th>FP</th>
-      <th>FN</th>
-      <th>TP</th>
+      <th>F1-score_std</th>
+      <th>F1-score_mean</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>LR</td>
-      <td>0.962281</td>
-      <td>0.039883</td>
-      <td>0.996433</td>
-      <td>0.009206</td>
-      <td>0.994915</td>
-      <td>0.994872</td>
-      <td>0.994866</td>
-      <td>117</td>
-      <td>0</td>
-      <td>1</td>
-      <td>77</td>
+      <td>0.967368</td>
+      <td>0.036086</td>
+      <td>0.997054</td>
+      <td>0.005706</td>
+      <td>0.970782</td>
+      <td>0.032493</td>
     </tr>
     <tr>
       <th>1</th>
       <td>LR_scl</td>
-      <td>0.948772</td>
-      <td>0.052862</td>
-      <td>0.992483</td>
-      <td>0.014296</td>
-      <td>0.969306</td>
-      <td>0.969231</td>
-      <td>0.969161</td>
-      <td>117</td>
-      <td>0</td>
-      <td>1</td>
-      <td>77</td>
+      <td>0.962105</td>
+      <td>0.041762</td>
+      <td>0.996717</td>
+      <td>0.006377</td>
+      <td>0.966411</td>
+      <td>0.037483</td>
     </tr>
     <tr>
       <th>2</th>
       <td>LDA</td>
-      <td>0.930088</td>
-      <td>0.061928</td>
-      <td>0.987374</td>
-      <td>0.021206</td>
-      <td>0.948695</td>
-      <td>0.948718</td>
-      <td>0.948602</td>
-      <td>113</td>
-      <td>4</td>
-      <td>6</td>
-      <td>72</td>
+      <td>0.938421</td>
+      <td>0.044678</td>
+      <td>0.984428</td>
+      <td>0.018712</td>
+      <td>0.944657</td>
+      <td>0.040591</td>
     </tr>
     <tr>
       <th>3</th>
       <td>LDA_scl</td>
-      <td>0.930088</td>
-      <td>0.061928</td>
-      <td>0.987374</td>
-      <td>0.021206</td>
-      <td>0.948695</td>
-      <td>0.948718</td>
-      <td>0.948602</td>
-      <td>113</td>
-      <td>4</td>
-      <td>6</td>
-      <td>72</td>
+      <td>0.938421</td>
+      <td>0.044678</td>
+      <td>0.984428</td>
+      <td>0.018712</td>
+      <td>0.944657</td>
+      <td>0.040591</td>
     </tr>
     <tr>
       <th>4</th>
       <td>KNN</td>
-      <td>0.917719</td>
-      <td>0.058930</td>
-      <td>0.947175</td>
-      <td>0.049720</td>
-      <td>0.929231</td>
-      <td>0.923077</td>
-      <td>0.921605</td>
-      <td>116</td>
-      <td>1</td>
-      <td>14</td>
-      <td>64</td>
+      <td>0.866404</td>
+      <td>0.061752</td>
+      <td>0.962374</td>
+      <td>0.034538</td>
+      <td>0.887250</td>
+      <td>0.048633</td>
     </tr>
     <tr>
       <th>5</th>
       <td>KNN_scl</td>
-      <td>0.893860</td>
-      <td>0.054685</td>
-      <td>0.944715</td>
-      <td>0.059731</td>
-      <td>0.936025</td>
-      <td>0.933333</td>
-      <td>0.932527</td>
-      <td>116</td>
-      <td>1</td>
-      <td>14</td>
-      <td>64</td>
+      <td>0.904211</td>
+      <td>0.050668</td>
+      <td>0.957260</td>
+      <td>0.041413</td>
+      <td>0.919639</td>
+      <td>0.040403</td>
     </tr>
     <tr>
       <th>6</th>
       <td>GaussianNB</td>
-      <td>0.945088</td>
-      <td>0.051750</td>
-      <td>0.982991</td>
-      <td>0.029086</td>
-      <td>0.944379</td>
-      <td>0.943590</td>
-      <td>0.943756</td>
-      <td>110</td>
-      <td>7</td>
-      <td>4</td>
-      <td>74</td>
+      <td>0.951842</td>
+      <td>0.042347</td>
+      <td>0.978956</td>
+      <td>0.031497</td>
+      <td>0.957263</td>
+      <td>0.037552</td>
     </tr>
     <tr>
       <th>7</th>
       <td>GaussianNB_scl</td>
-      <td>0.945088</td>
-      <td>0.051750</td>
-      <td>0.982991</td>
-      <td>0.029086</td>
-      <td>0.944379</td>
-      <td>0.943590</td>
-      <td>0.943756</td>
-      <td>110</td>
-      <td>7</td>
-      <td>4</td>
-      <td>74</td>
+      <td>0.951842</td>
+      <td>0.042347</td>
+      <td>0.978956</td>
+      <td>0.031497</td>
+      <td>0.957263</td>
+      <td>0.037552</td>
     </tr>
     <tr>
       <th>8</th>
       <td>CART</td>
-      <td>0.976053</td>
-      <td>0.039058</td>
-      <td>0.998722</td>
-      <td>0.003887</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
-      <td>117</td>
-      <td>0</td>
-      <td>0</td>
-      <td>78</td>
+      <td>0.986316</td>
+      <td>0.022703</td>
+      <td>0.998948</td>
+      <td>0.003162</td>
+      <td>0.987578</td>
+      <td>0.020621</td>
     </tr>
     <tr>
       <th>9</th>
       <td>CART_scl</td>
-      <td>0.976053</td>
-      <td>0.039058</td>
-      <td>0.998722</td>
-      <td>0.003887</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
-      <td>117</td>
-      <td>0</td>
-      <td>0</td>
-      <td>78</td>
+      <td>0.986316</td>
+      <td>0.022703</td>
+      <td>0.998948</td>
+      <td>0.003162</td>
+      <td>0.987578</td>
+      <td>0.020621</td>
     </tr>
     <tr>
       <th>10</th>
       <td>SVM</td>
-      <td>0.928158</td>
-      <td>0.050766</td>
-      <td>0.976790</td>
-      <td>0.035086</td>
-      <td>0.936025</td>
-      <td>0.933333</td>
-      <td>0.932527</td>
-      <td>115</td>
-      <td>2</td>
-      <td>11</td>
-      <td>67</td>
+      <td>0.960526</td>
+      <td>0.040966</td>
+      <td>0.997854</td>
+      <td>0.005031</td>
+      <td>0.964820</td>
+      <td>0.036705</td>
     </tr>
     <tr>
       <th>11</th>
       <td>SVM_scl</td>
-      <td>0.928158</td>
-      <td>0.052553</td>
-      <td>0.985638</td>
-      <td>0.015748</td>
-      <td>0.959000</td>
-      <td>0.958974</td>
-      <td>0.958882</td>
-      <td>115</td>
-      <td>2</td>
-      <td>11</td>
-      <td>67</td>
+      <td>0.965614</td>
+      <td>0.040352</td>
+      <td>0.998232</td>
+      <td>0.004742</td>
+      <td>0.969074</td>
+      <td>0.037104</td>
     </tr>
   </tbody>
 </table>
@@ -1581,7 +1194,7 @@ result
 In this section, we are interested in tuning and comparing different parameter settings to further improve the performance for making predictions on unseen data. "This process is called model selection, with
 the name referring to a given classification problem for which we want to select the optimal values of tuning parameters (also called hyperparameters)" (RASCHKA; MIRJALILI, 2019).
 
-**We verifiy that the best parameters for the LogR model are C=100,penalty='l2',solver='lbfgs'. For the CART model, the best parameters are max_features='log2', and n_estimators=10. Besides, we verify that the CART model is better than the LR model**.
+**We verifiy that the best parameters for the LogR model are 'C': 1.0, 'penalty': 'l2', 'solver': 'newton-cg'. For the CART model, the best parameters are 'max_features': 'log2', 'n_estimators': 100. Besides, we verify that the CART model is better than the LR model**.
 
 
 ```python
@@ -1592,7 +1205,7 @@ model = LogisticRegression()
 solvers = ['newton-cg', 'lbfgs', 'liblinear']
 penalty = ['l2']
 c_values = [100, 10, 1.0, 0.1, 0.01]
-scoring=['accuracy','roc_auc']
+scoring=['f1','roc_auc']
 
 # define grid search
 grid = dict(solver=solvers,penalty=penalty,C=c_values)
@@ -1601,76 +1214,30 @@ grid_search = GridSearchCV(estimator=model, param_grid=grid, n_jobs=-1, cv=cv, s
 grid_result = grid_search.fit(fire_X_train, fire_y_train)
 
 # summarize results
-means_acc = grid_result.cv_results_['mean_test_accuracy']
+means_f1 = grid_result.cv_results_['mean_test_f1']
 means_roc = grid_result.cv_results_['mean_test_roc_auc']
-stds_acc = grid_result.cv_results_['std_test_accuracy']
+stds_f1 = grid_result.cv_results_['std_test_f1']
 stds_roc = grid_result.cv_results_['std_test_roc_auc']
 params = grid_result.cv_results_['params']
-for mean_acc, stdev_acc, mean_roc, stdev_roc, param in zip(means_acc, stds_acc, means_roc, stds_roc, params):
-    print("%f (%f) %f (%f) with: %r" % (mean_acc, stdev_acc, mean_roc, stdev_roc, param))
+for mean_f1, stdev_f1, mean_roc, stdev_roc, param in zip(means_f1, stds_f1, means_roc, stds_roc, params):
+    print("F1:%f (%f) ROC_AUC:%f (%f) with: %r" % (mean_f1, stdev_f1, mean_roc, stdev_roc, param))
 ```
 
-    0.970965 (0.038691) 0.997822 (0.005904) with: {'C': 100, 'penalty': 'l2', 'solver': 'newton-cg'}
-    0.972544 (0.041189) 0.998169 (0.005040) with: {'C': 100, 'penalty': 'l2', 'solver': 'lbfgs'}
-    0.970965 (0.044688) 0.996812 (0.006743) with: {'C': 100, 'penalty': 'l2', 'solver': 'liblinear'}
-    0.970965 (0.038691) 0.998927 (0.003223) with: {'C': 10, 'penalty': 'l2', 'solver': 'newton-cg'}
-    0.965877 (0.046036) 0.997822 (0.005904) with: {'C': 10, 'penalty': 'l2', 'solver': 'lbfgs'}
-    0.965877 (0.046036) 0.996465 (0.007824) with: {'C': 10, 'penalty': 'l2', 'solver': 'liblinear'}
-    0.969386 (0.038434) 0.998895 (0.003317) with: {'C': 1.0, 'penalty': 'l2', 'solver': 'newton-cg'}
-    0.962281 (0.039883) 0.996433 (0.009206) with: {'C': 1.0, 'penalty': 'l2', 'solver': 'lbfgs'}
-    0.962281 (0.039883) 0.996433 (0.009206) with: {'C': 1.0, 'penalty': 'l2', 'solver': 'liblinear'}
-    0.965965 (0.046393) 0.998169 (0.005713) with: {'C': 0.1, 'penalty': 'l2', 'solver': 'newton-cg'}
-    0.950439 (0.042509) 0.994219 (0.010635) with: {'C': 0.1, 'penalty': 'l2', 'solver': 'lbfgs'}
-    0.945351 (0.048674) 0.992830 (0.012369) with: {'C': 0.1, 'penalty': 'l2', 'solver': 'liblinear'}
-    0.952281 (0.047289) 0.995292 (0.008597) with: {'C': 0.01, 'penalty': 'l2', 'solver': 'newton-cg'}
-    0.952281 (0.047289) 0.995292 (0.008597) with: {'C': 0.01, 'penalty': 'l2', 'solver': 'lbfgs'}
-    0.926491 (0.063489) 0.983874 (0.023779) with: {'C': 0.01, 'penalty': 'l2', 'solver': 'liblinear'}
-
-
-
-```python
-evaluation(LogisticRegression(C=100,penalty='l2',solver='lbfgs'),fire_X_train,fire_y_train,rs)
-evaluation(LogisticRegression(C=10,penalty='l2',solver='newton-cg'),fire_X_train,fire_y_train,rs)
-```
-
-    Accuracy: 0.972544 (0.041189)
-    
-    Confusion Matrix:
-    
-     [[117   0]
-     [  0  78]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       1.00      1.00      1.00       117
-        not fire       1.00      1.00      1.00        78
-    
-        accuracy                           1.00       195
-       macro avg       1.00      1.00      1.00       195
-    weighted avg       1.00      1.00      1.00       195
-    
-    ROC-AUC: 0.998169 (0.005040)
-    
-    Accuracy: 0.970965 (0.038691)
-    
-    Confusion Matrix:
-    
-     [[117   0]
-     [  0  78]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       1.00      1.00      1.00       117
-        not fire       1.00      1.00      1.00        78
-    
-        accuracy                           1.00       195
-       macro avg       1.00      1.00      1.00       195
-    weighted avg       1.00      1.00      1.00       195
-    
-    ROC-AUC: 0.998927 (0.003223)
-    
+    F1:0.966566 (0.034775) ROC_AUC:0.997854 (0.005031) with: {'C': 100, 'penalty': 'l2', 'solver': 'newton-cg'}
+    F1:0.970914 (0.030233) ROC_AUC:0.995539 (0.007468) with: {'C': 100, 'penalty': 'l2', 'solver': 'lbfgs'}
+    F1:0.966566 (0.028831) ROC_AUC:0.996296 (0.006011) with: {'C': 100, 'penalty': 'l2', 'solver': 'liblinear'}
+    F1:0.966566 (0.034775) ROC_AUC:0.997854 (0.005031) with: {'C': 10, 'penalty': 'l2', 'solver': 'newton-cg'}
+    F1:0.971211 (0.027138) ROC_AUC:0.997054 (0.005706) with: {'C': 10, 'penalty': 'l2', 'solver': 'lbfgs'}
+    F1:0.971211 (0.027138) ROC_AUC:0.997054 (0.005706) with: {'C': 10, 'penalty': 'l2', 'solver': 'liblinear'}
+    F1:0.971217 (0.029559) ROC_AUC:0.997854 (0.005031) with: {'C': 1.0, 'penalty': 'l2', 'solver': 'newton-cg'}
+    F1:0.970782 (0.032493) ROC_AUC:0.997054 (0.005706) with: {'C': 1.0, 'penalty': 'l2', 'solver': 'lbfgs'}
+    F1:0.970782 (0.032493) ROC_AUC:0.997054 (0.005706) with: {'C': 1.0, 'penalty': 'l2', 'solver': 'liblinear'}
+    F1:0.966428 (0.035890) ROC_AUC:0.997475 (0.006038) with: {'C': 0.1, 'penalty': 'l2', 'solver': 'newton-cg'}
+    F1:0.967442 (0.044193) ROC_AUC:0.996002 (0.008601) with: {'C': 0.1, 'penalty': 'l2', 'solver': 'lbfgs'}
+    F1:0.968892 (0.044522) ROC_AUC:0.996338 (0.007717) with: {'C': 0.1, 'penalty': 'l2', 'solver': 'liblinear'}
+    F1:0.963650 (0.036405) ROC_AUC:0.997138 (0.007187) with: {'C': 0.01, 'penalty': 'l2', 'solver': 'newton-cg'}
+    F1:0.963650 (0.036405) ROC_AUC:0.997138 (0.007187) with: {'C': 0.01, 'penalty': 'l2', 'solver': 'lbfgs'}
+    F1:0.957756 (0.038238) ROC_AUC:0.991498 (0.014656) with: {'C': 0.01, 'penalty': 'l2', 'solver': 'liblinear'}
 
 
 
@@ -1678,7 +1245,7 @@ evaluation(LogisticRegression(C=10,penalty='l2',solver='newton-cg'),fire_X_train
 model = RandomForestClassifier(random_state=rs)
 n_estimators = [10, 100, 1000]
 max_features = ['sqrt', 'log2']
-scoring=['accuracy','roc_auc']
+scoring=['f1','roc_auc']
 
 # define grid search
 grid = dict(n_estimators=n_estimators,max_features=max_features)
@@ -1687,67 +1254,21 @@ grid_search = GridSearchCV(estimator=model, param_grid=grid, n_jobs=-1, cv=cv, s
 grid_result = grid_search.fit(fire_X_train, fire_y_train)
 
 # summarize results
-means_acc = grid_result.cv_results_['mean_test_accuracy']
+means_f1 = grid_result.cv_results_['mean_test_f1']
 means_roc = grid_result.cv_results_['mean_test_roc_auc']
-stds_acc = grid_result.cv_results_['std_test_accuracy']
+stds_f1 = grid_result.cv_results_['std_test_f1']
 stds_roc = grid_result.cv_results_['std_test_roc_auc']
 params = grid_result.cv_results_['params']
-for mean_acc, stdev_acc, mean_roc, stdev_roc, param in zip(means_acc, stds_acc, means_roc, stds_roc, params):
-    print("%f (%f) %f (%f) with: %r" % (mean_acc, stdev_acc, mean_roc, stdev_roc, param))
+for mean_f1, stdev_f1, mean_roc, stdev_roc, param in zip(means_f1, stds_f1, means_roc, stds_roc, params):
+    print("F1:%f (%f) ROC_AUC:%f (%f) with: %r" % (mean_f1, stdev_f1, mean_roc, stdev_roc, param))
 ```
 
-    0.981228 (0.030994) 0.993860 (0.016602) with: {'max_features': 'sqrt', 'n_estimators': 10}
-    0.976053 (0.039058) 0.998722 (0.003887) with: {'max_features': 'sqrt', 'n_estimators': 100}
-    0.976053 (0.039058) 0.998895 (0.003317) with: {'max_features': 'sqrt', 'n_estimators': 1000}
-    0.981228 (0.030994) 0.993860 (0.016602) with: {'max_features': 'log2', 'n_estimators': 10}
-    0.976053 (0.039058) 0.998722 (0.003887) with: {'max_features': 'log2', 'n_estimators': 100}
-    0.976053 (0.039058) 0.998895 (0.003317) with: {'max_features': 'log2', 'n_estimators': 1000}
-
-
-
-```python
-evaluation(RandomForestClassifier(max_features='log2',n_estimators=10,random_state=rs),fire_X_train,fire_y_train,rs)
-evaluation(RandomForestClassifier(max_features='sqrt',n_estimators=1000,random_state=rs),fire_X_train,fire_y_train,rs)
-```
-
-    Accuracy: 0.981228 (0.030994)
-    
-    Confusion Matrix:
-    
-     [[117   0]
-     [  0  78]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       1.00      1.00      1.00       117
-        not fire       1.00      1.00      1.00        78
-    
-        accuracy                           1.00       195
-       macro avg       1.00      1.00      1.00       195
-    weighted avg       1.00      1.00      1.00       195
-    
-    ROC-AUC: 0.993860 (0.016602)
-    
-    Accuracy: 0.976053 (0.039058)
-    
-    Confusion Matrix:
-    
-     [[117   0]
-     [  0  78]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       1.00      1.00      1.00       117
-        not fire       1.00      1.00      1.00        78
-    
-        accuracy                           1.00       195
-       macro avg       1.00      1.00      1.00       195
-    weighted avg       1.00      1.00      1.00       195
-    
-    ROC-AUC: 0.998895 (0.003317)
-    
+    F1:0.977854 (0.032618) ROC_AUC:0.997580 (0.009241) with: {'max_features': 'sqrt', 'n_estimators': 10}
+    F1:0.987578 (0.020621) ROC_AUC:0.998948 (0.003162) with: {'max_features': 'sqrt', 'n_estimators': 100}
+    F1:0.984679 (0.021699) ROC_AUC:0.998948 (0.003162) with: {'max_features': 'sqrt', 'n_estimators': 1000}
+    F1:0.977854 (0.032618) ROC_AUC:0.997580 (0.009241) with: {'max_features': 'log2', 'n_estimators': 10}
+    F1:0.987578 (0.020621) ROC_AUC:0.998948 (0.003162) with: {'max_features': 'log2', 'n_estimators': 100}
+    F1:0.984679 (0.021699) ROC_AUC:0.998948 (0.003162) with: {'max_features': 'log2', 'n_estimators': 1000}
 
 
 ---------
@@ -1758,9 +1279,9 @@ Now evaluate the performance of our ML model in the test set, to see how it perf
 
 First, we prepare the X_test data as we did with the X_train data.
 
-Then, we test the two models, to check if the CART is better than LogR models with the test data too.
+Then, we test the two models, to check if the CART model is better than LogR model with the test data too.
 
-We see that both models have the same Accuracy, but the CART have a higher ROC-AUC. Besides, the LogR have a false negative, while the CART have a false positive. **Overeall, the CART model is slightly better than the LogR model for our data set**.
+**We see that the LogR model perform better than the CART model with the test data**.
 
 
 ```python
@@ -1768,208 +1289,133 @@ fire_X_test['date'] = fire_X_test['date'].dt.week
 fire_X_test = fire_X_test.rename(columns={'date': 'week'})
 fire_X_test['region'] = fire_X_test['region'].str.replace('Bejaia','0').str.replace('Sidi-Bel Abbes','1')
 fire_X_test['region'] = fire_X_test['region'].astype(int)
-fire_X_test.head()
 ```
 
 
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Temperature</th>
-      <th>RH</th>
-      <th>Ws</th>
-      <th>Rain</th>
-      <th>FFMC</th>
-      <th>DMC</th>
-      <th>DC</th>
-      <th>ISI</th>
-      <th>BUI</th>
-      <th>FWI</th>
-      <th>region</th>
-      <th>week</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>119</th>
-      <td>31</td>
-      <td>66</td>
-      <td>11</td>
-      <td>0.0</td>
-      <td>85.7</td>
-      <td>8.3</td>
-      <td>24.9</td>
-      <td>4.0</td>
-      <td>9.0</td>
-      <td>4.1</td>
-      <td>0</td>
-      <td>39</td>
-    </tr>
-    <tr>
-      <th>67</th>
-      <td>32</td>
-      <td>75</td>
-      <td>14</td>
-      <td>0.0</td>
-      <td>86.4</td>
-      <td>13.0</td>
-      <td>39.1</td>
-      <td>5.2</td>
-      <td>14.2</td>
-      <td>6.8</td>
-      <td>0</td>
-      <td>32</td>
-    </tr>
-    <tr>
-      <th>220</th>
-      <td>30</td>
-      <td>66</td>
-      <td>15</td>
-      <td>0.2</td>
-      <td>73.5</td>
-      <td>4.1</td>
-      <td>26.6</td>
-      <td>1.5</td>
-      <td>6.0</td>
-      <td>0.7</td>
-      <td>1</td>
-      <td>36</td>
-    </tr>
-    <tr>
-      <th>115</th>
-      <td>32</td>
-      <td>54</td>
-      <td>11</td>
-      <td>0.5</td>
-      <td>73.7</td>
-      <td>7.9</td>
-      <td>30.4</td>
-      <td>1.2</td>
-      <td>9.6</td>
-      <td>0.7</td>
-      <td>0</td>
-      <td>38</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>28</td>
-      <td>79</td>
-      <td>12</td>
-      <td>0.0</td>
-      <td>73.2</td>
-      <td>9.5</td>
-      <td>46.3</td>
-      <td>1.3</td>
-      <td>12.6</td>
-      <td>0.9</td>
-      <td>0</td>
-      <td>23</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
 ```python
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, plot_confusion_matrix
 
-LR = LogisticRegression(C=100,penalty='l2',solver='lbfgs')
+LR = LogisticRegression(C=1,penalty='l2',solver='newton-cg')
 LR.fit(fire_X_train,fire_y_train)
 
 fire_yhat_test = LR.predict(fire_X_test)
 fire_yprob_test = LR.predict_proba(fire_X_test)[:,1]
 
 acc = accuracy_score(fire_y_test,fire_yhat_test)
-CM = confusion_matrix(fire_y_test,fire_yhat_test)
 roc = roc_auc_score(fire_y_test,fire_yprob_test)
-report = classification_report(fire_y_test,fire_yhat_test)
+f1 = f1_score(fire_y_test,fire_yhat_test)
 
-print('Accuracy: %.6f\n' % acc)
-print('\nConfusion Matrix:\n\n',CM)
-print('\nReport:\n',report)
-print('ROC-AUC: %.6f\n' % roc)
+print('Accuracy: %.6f' % acc)
+print('ROC-AUC: %.6f' % roc)
+print('F1-score: %.6f' % f1)
+
+class_names = ['fire','not fire']
+disp = plot_confusion_matrix(LR,fire_X_test,fire_y_test,
+                             display_labels=class_names,
+                             cmap=plt.cm.Blues,
+                             )
+disp.ax_.set_title("Confusion matrix")
+
+
+
+plt.show()
 ```
 
-    Accuracy: 0.979592
+    Accuracy: 0.959184
+    ROC-AUC: 0.993197
+    F1-score: 0.964286
+
+
+
     
-    
-    Confusion Matrix:
-    
-     [[20  1]
-     [ 0 28]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       1.00      0.95      0.98        21
-        not fire       0.97      1.00      0.98        28
-    
-        accuracy                           0.98        49
-       macro avg       0.98      0.98      0.98        49
-    weighted avg       0.98      0.98      0.98        49
-    
-    ROC-AUC: 0.996599
+![png](output_47_1.png)
     
 
 
 
 ```python
-rcc = RandomForestClassifier(max_features='log2',n_estimators=10,random_state=rs)
+from sklearn.metrics import roc_curve
+
+# plot no skill roc curve
+plt.plot([0, 1], [0, 1], linestyle='--', label='No Skill')
+# calculate roc curve for model
+fpr, tpr, _ = roc_curve(fire_y_test, fire_yprob_test)
+# plot model roc curve
+plt.plot(fpr, tpr, marker='.', label='Logistic(area = %0.3f)' % roc)
+# axis labels
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+# show the legend
+plt.legend()
+plt.title('ROC curve')
+# show the plot
+plt.show()
+```
+
+
+    
+![png](output_48_0.png)
+    
+
+
+
+```python
+rcc = RandomForestClassifier(max_features='log2',n_estimators=100,random_state=rs)
 rcc.fit(fire_X_train,fire_y_train)
 
 fire_yhat_test = rcc.predict(fire_X_test)
 fire_yprob_test = rcc.predict_proba(fire_X_test)[:,1]
 
 acc = accuracy_score(fire_y_test,fire_yhat_test)
-CM = confusion_matrix(fire_y_test,fire_yhat_test)
 roc = roc_auc_score(fire_y_test,fire_yprob_test)
-report = classification_report(fire_y_test,fire_yhat_test)
+f1 = f1_score(fire_y_test,fire_yhat_test)
 
-print('Accuracy: %.6f\n' % acc)
-print('\nConfusion Matrix:\n\n',CM)
-print('\nReport:\n',report)
-print('ROC-AUC: %.6f\n' % roc)
+print('Accuracy: %.6f' % acc)
+print('ROC-AUC: %.6f' % roc)
+print('F1-score: %.6f' % f1)
+
+class_names = ['fire','not fire']
+disp = plot_confusion_matrix(rcc,fire_X_test,fire_y_test,
+                             display_labels=class_names,
+                             cmap=plt.cm.Blues,
+                             )
+disp.ax_.set_title("Confusion matrix")
+
+plt.show()
 ```
 
-    Accuracy: 0.979592
+    Accuracy: 0.938776
+    ROC-AUC: 0.991497
+    F1-score: 0.945455
+
+
+
     
+![png](output_49_1.png)
     
-    Confusion Matrix:
+
+
+
+```python
+# plot no skill roc curve
+plt.plot([0, 1], [0, 1], linestyle='--', label='No Skill')
+# calculate roc curve for model
+fpr, tpr, _ = roc_curve(fire_y_test, fire_yprob_test)
+# plot model roc curve
+plt.plot(fpr, tpr, marker='.', label='Random Forest (area = %0.3f)' % roc)
+# axis labels
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC curve')
+# show the legend
+plt.legend()
+# show the plot
+plt.show()
+```
+
+
     
-     [[21  0]
-     [ 1 27]]
-    
-    Report:
-                   precision    recall  f1-score   support
-    
-            fire       0.95      1.00      0.98        21
-        not fire       1.00      0.96      0.98        28
-    
-        accuracy                           0.98        49
-       macro avg       0.98      0.98      0.98        49
-    weighted avg       0.98      0.98      0.98        49
-    
-    ROC-AUC: 0.999150
+![png](output_50_0.png)
     
 
 
@@ -1988,6 +1434,6 @@ First, we tested some classification models:
 5. Classification and Regression Trees (CART)
 6. Support Vector Machines (SVM)
 
-In this first tests, the LR and the CART model performed bettet than the others. Beside, we verified that scaling the features had no significant impact in the models' perfomance.
+In these first tests, the LR and the CART model performed bettet than the others. Beside, we verified that scaling the features had no significant impact in the models' perfomance.
 
-**Therefore, we tested two models with our test set: (i) LogR and (ii) CART. We verified that the models performed similarly. However, the CART model was slightly better**.
+**Therefore, we tested two models with our test set: (i) LogR and (ii) CART. We verified that the models performed similarly. However, the LogR model was slightly better**.
